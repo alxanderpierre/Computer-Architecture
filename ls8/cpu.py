@@ -23,15 +23,11 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.registers = [0] * 8 # the different mailboxes
-        # [0,0,0,0,0,0,0,0]
-        #self.registers[7] = 0xf4
-        self.pc = 0 # program counter
-        # In CPU, add method ram_read() and ram_write()
-        # that access the RAM inside the CPU object.
-        self.ram =  [0b100000000] # memory holds 256 bytes
-        self.sp = 7
-        self.FL = 0b00000000
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
+        self.reg[7] = 0xf4
+        self.sp = self.reg[7]
 
     # You don't need to add the MAR or MDR to your CPU class,
     # but they would make handy parameter names for ram_read()
@@ -50,27 +46,24 @@ class CPU:
         self.ram[mar]=mdr
 
 
-    def load(self):
+    def load(self, program):
         """Load a program into memory."""
 
         address = 0
 
-        # For now, we've just hardcoded a program:
-        try:
-            with open(program_file_name) as f:
-                for line in f:
-                    line_string = line.split('#')[0].strip()
-                    if line_string == '':
-                        continue
-                    instruction = int(line_string, 2)
 
-                    self.ram[mar] = instruction
+        with open(program) as f:
+            for line in f:
+
+                line_string = line.split('#')[0].strip()
+
+                try:
+                    self.ram_write(address, int(line_string, 2))
                     address += 1
+                except ValueError:
+                    pass
+        f.close()
 
-        except Exception:
-            import os
-            raise FileNotFoundError(f"No File Name {program_file_name} in {os.getcwd()}")
-        print(self.ram[:20])
 
         #for inst in program:
         #    self.ram[mar] = inst
@@ -169,7 +162,7 @@ class CPU:
                 reg = self.ram[self.pc + 1]
                 # set the pc to the address that is stored in the register
                 self.pc = self.reg[reg]
-            # else:
+                # else:
                 # self.pc += 2
 
             elif IR == JNE:
